@@ -4,8 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "endereco")
 public class Endereco {
 
   @Id
@@ -15,6 +17,17 @@ public class Endereco {
   private String logradouro;
   private String complemento;
   private Integer numero;
+
+  public Endereco() {
+  }
+
+  public Endereco(Integer id, String rua, String logradouro, String complemento, Integer numero) {
+    this.id = id;
+    this.rua = rua;
+    this.logradouro = logradouro;
+    this.complemento = complemento;
+    this.numero = numero;
+  }
 
   public Integer getId() {
     return id;

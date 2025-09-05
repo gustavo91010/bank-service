@@ -4,6 +4,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 
 import br.com.ajudaqui.domain.Agencia;
 import br.com.ajudaqui.service.AgenciaHttpService;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -22,6 +23,7 @@ public class AgenciaController {
   }
 
   @POST
+  @Transactional
   public RestResponse<Void> cadastrar(Agencia agencia, @Context UriInfo uriInfo) {
     this.agenciaHttpService.cadastrar(agencia);
     return RestResponse.created(uriInfo.getAbsolutePath());
@@ -34,6 +36,11 @@ public class AgenciaController {
   // }
 
   @GET
+  @Path("/all")
+  public RestResponse<?> all() {
+    return RestResponse.ok(agenciaHttpService.all());
+  }
+  @GET
   @Path("{id}")
   public RestResponse<Agencia> buscarPorId(Long id) {
     return RestResponse.ok(agenciaHttpService.buscarPorId(id));
@@ -41,6 +48,7 @@ public class AgenciaController {
 
   @PUT
   @Path("{id}")
+  @Transactional
   public RestResponse<Void> alterar(Agencia agencia) {
     agenciaHttpService.alterar(agencia);
     return RestResponse.ok();
@@ -48,6 +56,7 @@ public class AgenciaController {
 
   @DELETE
   @Path("{id}")
+  @Transactional
   public RestResponse<Void> deletar(Long id) {
     agenciaHttpService.deletar(id);
     return RestResponse.ok();

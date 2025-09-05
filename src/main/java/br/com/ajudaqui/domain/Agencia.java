@@ -8,9 +8,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 @Entity
-
+@Table(name = "agencia")
 public class Agencia {
 
   @Id
@@ -20,9 +21,20 @@ public class Agencia {
   @Column(name = "razao_social")
   private String razaoSocial;
   private String cnpj;
-  @OneToOne(cascade = CascadeType.ALL)
+  @OneToOne(cascade = CascadeType.PERSIST)
   @JoinColumn(name = "endereco_id")
   private Endereco endereco;
+
+  public Agencia() {
+  }
+
+  public Agencia(Integer id, String nome, String razaoSocial, String cnpj, Endereco endereco) {
+    this.id = id;
+    this.nome = nome;
+    this.razaoSocial = razaoSocial;
+    this.cnpj = cnpj;
+    this.endereco = endereco;
+  }
 
   public Integer getId() {
     return id;
