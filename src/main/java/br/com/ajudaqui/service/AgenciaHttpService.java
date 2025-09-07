@@ -11,6 +11,7 @@ import br.com.ajudaqui.domain.Agencia;
 import br.com.ajudaqui.exceptions.AgenciaNaoAtivaOuNaoEncontrada;
 import br.com.ajudaqui.repository.AgenciaRepository;
 import br.com.ajudaqui.utils.SituacaoCadastral;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -21,33 +22,30 @@ public class AgenciaHttpService {
   @RestClient
   private SituacaoCadastralHttpService situacaoCadastralHttpService;
   private final AgenciaRepository agenciaRepository;
+  private final MeterRegistry meterRegistry;
 
-  public AgenciaHttpService(AgenciaRepository agenciaRepository) {
+  public AgenciaHttpService(AgenciaRepository agenciaRepository, MeterRegistry meterRegistry) {
     this.agenciaRepository = agenciaRepository;
+    this.meterRegistry = meterRegistry;
   }
-
-  // private List<Agencia> agencias = new ArrayList<>();
 
   public void cadastrar(Agencia agencia) {
-    System.out.println(
-      "estamo dentro do service j;a..."
-    );
     AgenciaHttp buscarPorCnpj = situacaoCadastralHttpService.buscarPorCnpj(agencia.getCnpj());
-    if (buscarPorCnpj.getSituacaoCadastral() != null
-        && buscarPorCnpj.getSituacaoCadastral().equals(SituacaoCadastral.ATIVO)) {
-      // agencias.add(agencia);
-  
-      agenciaRepository.persist(agencia);
-    } else {
+    meterRegistry.counter("Incremento na chamada da agencia").increment();
+    if (buscarPorCnpj == null ||
+        buscarPorCnpj.getSituacaoCadastral() == null
+            && !buscarPorCnpj.getSituacaoCadastral().equals(SituacaoCadastral.ATIVO)) {
+      meterRegistry.counter("Chamada de agencia com erro").increment();
       throw new AgenciaNaoAtivaOuNaoEncontrada();
-
     }
-
+    meterRegistry.counter("Chamada de agencia com sucesso").increment();
+    agenciaRepository.persist(agencia);
   }
 
-  public List<Agencia> all(){
+  public List<Agencia> all() {
     return agenciaRepository.findAll().list();
   }
+
   public Agencia buscarPorId(Long id) {
     return agenciaRepository.findById(id);
     // return agencias.stream()
