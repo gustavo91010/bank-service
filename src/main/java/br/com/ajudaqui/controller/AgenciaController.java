@@ -5,6 +5,8 @@ import org.jboss.resteasy.reactive.RestResponse;
 import br.com.ajudaqui.domain.Agencia;
 import br.com.ajudaqui.service.AgenciaHttpService;
 import io.quarkus.logging.Log;
+import io.smallrye.common.annotation.NonBlocking;
+import io.smallrye.mutiny.Uni;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -20,12 +22,13 @@ public class AgenciaController {
   }
 
   @POST
+  @NonBlocking
   @Transactional
-  public RestResponse<Void> cadastrar(Agencia agencia, @Context UriInfo uriInfo) {
+  public Uni<?> cadastrar(Agencia agencia, @Context UriInfo uriInfo) {
     Log.info("[POST] | /agencias | CNPJ: " + agencia.getCnpj());
+    return this.agenciaHttpService.cadastrar(agencia)
+        .replaceWith(RestResponse.created(uriInfo.getAbsolutePathBuilder().build()));
 
-    this.agenciaHttpService.cadastrar(agencia);
-    return RestResponse.created(uriInfo.getAbsolutePath());
   }
 
   @GET
@@ -38,28 +41,28 @@ public class AgenciaController {
 
   @GET
   @Path("{id}")
-  public RestResponse<Agencia> buscarPorId(Long id) {
+  public Uni<RestResponse<Agencia>> buscarPorId(Long id) {
     Log.info("[GET] | /agencias | ID: " + id);
-    return RestResponse.ok(agenciaHttpService.buscarPorId(id));
+    return agenciaHttpService.buscarPorId(id).onItem().transform(RestResponse::ok);
   }
 
   @PUT
   @Path("{id}")
   @Transactional
-  public RestResponse<String> alterar(Agencia agencia) {
+  public Uni<RestResponse<String>> alterar(Agencia agencia) {
 
     Log.info("[PUT] | /agencias | CNPJ: " + agencia.getCnpj());
-    agenciaHttpService.alterar(agencia);
-    return RestResponse.ok(String.format("Agencia id %s deletada com sucesso!", agencia.getCnpj()));
+    return agenciaHttpService.alterar(agencia)
+        .replaceWith(RestResponse.ok(String.format("Agencia id %s deletada com sucesso!", agencia.getCnpj())));
   }
 
   @DELETE
   @Path("{id}")
   @Transactional
-  public RestResponse<String> deletar(Long id) {
+  public Uni<RestResponse<String>> deletar(Long id) {
     Log.info("[DELETE] | /agencias | ID: " + id);
-    agenciaHttpService.deletar(id);
-    return RestResponse.ok(String.format("Agencia id %d deletada com sucesso!", id));
+    return agenciaHttpService.deletar(id)
+        .replaceWith(RestResponse.ok(String.format("Agencia id %d deletada com sucesso!", id)));
   }
 
 }

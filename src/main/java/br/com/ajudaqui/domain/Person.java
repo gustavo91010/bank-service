@@ -2,7 +2,10 @@ package br.com.ajudaqui.domain;
 
 import java.util.List;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.reactive.panache.PanacheEntity;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
+import io.smallrye.mutiny.Uni;
+// import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Entity;
 
 @Entity
@@ -18,15 +21,15 @@ public class Person extends PanacheEntity {
     return p;
   }
 
-  public static Person findByName(String name) {
+  public static Uni<Person> findByName(String name) {
     return find("name", name).firstResult();
   }
 
-  public static long userReistered() {
+  public static Uni<Long> userReistered() {
     return count();
   }
 
-  public static List<Person> findAdults() {
+  public static Uni<List<PanacheEntityBase>> findAdults() {
 
     return list("age >= 18", 18);
   }
@@ -40,5 +43,7 @@ public class Person extends PanacheEntity {
 }
 
 // Active Record:
-// A lógica de persistência e as regras de negócio estão todas dentro da entidade. Isso facilita a leitura,
-// mas pode dificultar a manutenção, já que a entidade carrega ambas as responsabilidades.
+// A lógica de persistência e as regras de negócio estão todas dentro da
+// entidade. Isso facilita a leitura,
+// mas pode dificultar a manutenção, já que a entidade carrega ambas as
+// responsabilidades.

@@ -44,13 +44,29 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-jackson</artifactId>
     </dependency>
+    <!-- usao para programação imperativa -->
+    <!-- <dependency> -->
+    <!--   <groupId>io.quarkus</groupId> -->
+    <!--   <artifactId>quarkus-hibernate-orm-panache</artifactId> -->
+    <!-- </dependency> -->
+    <!-- usao para programação reativa -->
+    <!-- banco postgres para  imperativo -->
+    <!-- <dependency> -->
+    <!-- <groupId>io.quarkus</groupId> -->
+    <!-- <artifactId>quarkus-jdbc-postgresql</artifactId> -->
+    <!-- </dependency> -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-hibernate-orm-panache</artifactId>
+      <artifactId>quarkus-hibernate-reactive-panache</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jdbc-postgresql</artifactId>
+      <artifactId>quarkus-hibernate-reactive</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-reactive-pg-client</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

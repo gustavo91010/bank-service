@@ -14,6 +14,8 @@ import br.com.ajudaqui.repository.AgenciaRepository;
 import br.com.ajudaqui.utils.SituacaoCadastral;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.Vertx;
 import jakarta.inject.Inject;
 
 @QuarkusTest
@@ -31,9 +33,13 @@ public class AgenciaHttpServiceTest {
   @Test
   public void deveNaoCadastrarQUandoClientChamarNull() {
     Agencia agencia = agenciaMock();
-    Mockito.when(situacaoCadastralHttpService.buscarPorCnpj("123")).thenReturn(null);
-    Assertions.assertThrows(AgenciaNaoAtivaOuNaoEncontrada.class, () -> agenciaHttpService.cadastrar(agencia));
-    Mockito.verify(agenciaRepository, Mockito.never()).persist(agencia);
+    Mockito.when(situacaoCadastralHttpService.buscarPorCnpj("123")).thenReturn(Uni.createFrom().nullItem());
+    Vertx.vertx().runOnContext(v -> {
+      Assertions.assertThrows(AgenciaNaoAtivaOuNaoEncontrada.class,
+          () -> agenciaHttpService.cadastrar(agencia).await());
+      // test a gente pode bloquear a treahd indefinicamente para testra o verify
+      Mockito.verify(agenciaRepository, Mockito.never()).persist(agencia);
+    });
   }
 
   @Test
@@ -41,16 +47,18 @@ public class AgenciaHttpServiceTest {
     Agencia agencia = agenciaMock();
     Mockito.when(situacaoCadastralHttpService.buscarPorCnpj("123"))
         .thenReturn(agenciaHttpMock(SituacaoCadastral.ATIVO));
-    agenciaHttpService.cadastrar(agencia);
-    Mockito.verify(agenciaRepository).persist(agencia);
+    Vertx.vertx().runOnContext(r -> {
+      agenciaHttpService.cadastrar(agencia).await();
+      Mockito.verify(agenciaRepository).persist(agencia);
+    });
   }
 
-  private AgenciaHttp agenciaHttpMock(SituacaoCadastral situacaiCadastral) {
-    return new AgenciaHttp("", "", "", situacaiCadastral);
+  private Uni<AgenciaHttp> agenciaHttpMock(SituacaoCadastral situacaiCadastral) {
+    return Uni.createFrom().item(new AgenciaHttp("", "", "", situacaiCadastral));
   }
 
   private Agencia agenciaMock() {
     Endereco endereco = new Endereco(1, "", "", "", 4);
-    return new Agencia(3, "", "", "123", endereco);
+    return new Agencia(3l, "", "", "123", endereco);
   }
 }
