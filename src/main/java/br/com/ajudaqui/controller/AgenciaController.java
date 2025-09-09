@@ -6,6 +6,7 @@ import br.com.ajudaqui.domain.Agencia;
 import br.com.ajudaqui.service.AgenciaHttpService;
 import io.quarkus.logging.Log;
 import io.smallrye.common.annotation.NonBlocking;
+import io.smallrye.faulttolerance.api.RateLimit;
 import io.smallrye.mutiny.Uni;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -41,6 +42,7 @@ public class AgenciaController {
 
   @GET
   @Path("{id}")
+  @RateLimit(value = 5, window = 10) // maximo de 5 requisições em uma janela de 10s
   public Uni<RestResponse<Agencia>> buscarPorId(Long id) {
     Log.info("[GET] | /agencias | ID: " + id);
     return agenciaHttpService.buscarPorId(id).onItem().transform(RestResponse::ok);

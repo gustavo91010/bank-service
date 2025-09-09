@@ -49,6 +49,7 @@ public class AgenciaHttpService {
   }
 
   public Uni<Void> chamarFallbackMethod(Agencia agencia) {
+    // Obs: o metodo de fallback tem que ter s mesmos parametros e retorno do medodo raiz
     Log.info(String.format("Agencica com cnpj %s não foi adicionada", agencia.getCnpj()));
     return Uni.createFrom().nullItem();
   }
