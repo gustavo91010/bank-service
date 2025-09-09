@@ -3,6 +3,8 @@ package br.com.ajudaqui.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import br.com.ajudaqui.client.AgenciaHttp;
@@ -14,6 +16,7 @@ import br.com.ajudaqui.utils.SituacaoCadastral;
 import io.micrometer.core.instrument.MeterRegistry;
 // import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -32,11 +35,22 @@ public class AgenciaHttpService {
   }
 
   @WithTransaction // para manter a transação aberta
+  @CircuitBreaker(requestVolumeThreshold = 5, // quantidade de vezes ate abriri o circuito
+      failureRatio = 0.5, // porcentagem de erro
+      delay = 2000, // tempo para ficar rauf open
+      successThreshold = 2 // numero de tentativas para fechar o cirvuti
+  )
+  @Fallback(fallbackMethod = "chamarFallbackMethod")
   public Uni<Void> cadastrar(Agencia agencia) {
     Uni<AgenciaHttp> buscarPorCnpj = situacaoCadastralHttpService.buscarPorCnpj(agencia.getCnpj());
 
     return buscarPorCnpj.onItem().ifNull().failWith(new AgenciaNaoAtivaOuNaoEncontrada())
         .onItem().transformToUni(item -> persistirSeAtiva(agencia, item));
+  }
+
+  public Uni<Void> chamarFallbackMethod(Agencia agencia) {
+    Log.info(String.format("Agencica com cnpj %s não foi adicionada", agencia.getCnpj()));
+    return Uni.createFrom().nullItem();
   }
 
   private Uni<Void> persistirSeAtiva(Agencia agencia, AgenciaHttp item) {
@@ -76,7 +90,7 @@ public class AgenciaHttpService {
 
   @WithTransaction // para manter a transação aberta com a base de dados
   public Uni<Void> alterar(Agencia agencia) {
-  return  agenciaRepository.update("nome =?1, razaoSocial = ?2, cnpj = ?3 where id = ?4",
+    return agenciaRepository.update("nome =?1, razaoSocial = ?2, cnpj = ?3 where id = ?4",
         agencia.getNome(), agencia.getRazaoSocial(), agencia.getCnpj(), agencia.getId()).replaceWithVoid();
     // deletar(agencia.getId());
     // cadastrar(agencia);
